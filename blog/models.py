@@ -1,12 +1,28 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 
 
 class PostQuerySet(models.QuerySet):
-    def year(self, year):
-        return self.filter(published_at__year=year).order_by('published_at')
+    def popular(self):
+        """Возвращает QuerySet популярных постов, отсортированных по лайкам"""
+        return self.annotate(likes_count=Count('likes'))\
+                  .order_by('-likes_count')
+
+    def fetch_with_comments_count(self):
+        """
+        Возвращает список постов с предварительно загруженным количеством комментариев.
+        """
+        posts = self.prefetch_related(
+            Prefetch('comments', queryset=Comment.objects.only('id', 'post'))
+        )
+        result = []
+        for post in posts:
+            post.comments_count = len(post.comments.all())
+            result.append(post)
+        return result
+
 
 class Post(models.Model):
     title = models.CharField('Заголовок', max_length=200)
