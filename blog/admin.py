@@ -4,8 +4,8 @@ from blog.models import Post, Tag, Comment
 
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('id', 'author', 'post', 'short_text', 'published_at')
-    list_select_related = ('author', 'post')  # Оптимизация запросов
-    raw_id_fields = ('post', 'author')  # Замена выпадающих списков на поиск по ID
+    list_select_related = ('author', 'post')
+    raw_id_fields = ('post', 'author')
     search_fields = ('text', 'author__username')
 
     def short_text(self, obj):
