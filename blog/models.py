@@ -57,6 +57,14 @@ class TagQuerySet(models.QuerySet):
     def popular(self):
         return self.annotate(posts_count=Count('posts')).order_by('-posts_count')
 
+    def with_posts_count(self):
+        """Возвращает QuerySet тегов с аннотированным количеством постов"""
+        return self.annotate(posts_count=Count('posts'))
+
+    def prefetch_for_posts(self):
+        """Возвращает Prefetch-объект для тегов с количеством постов"""
+        return Prefetch('tags', queryset=self.with_posts_count())
+
 
 class Tag(models.Model):
     title = models.CharField('Тег', max_length=20, unique=True)
@@ -86,7 +94,8 @@ class Comment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Автор')
+        verbose_name='Автор',
+        related_name='user_comments')
 
     text = models.TextField('Текст комментария')
     published_at = models.DateTimeField('Дата и время публикации')
