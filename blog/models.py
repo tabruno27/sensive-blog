@@ -14,14 +14,8 @@ class PostQuerySet(models.QuerySet):
         """
         Возвращает список постов с предварительно загруженным количеством комментариев.
         """
-        posts = self.prefetch_related(
-            Prefetch('comments', queryset=Comment.objects.only('id', 'post'))
-        )
-        result = []
-        for post in posts:
-            post.comments_count = len(post.comments.all())
-            result.append(post)
-        return result
+        posts = self.annotate(comments_count=Count('comments'))
+        return posts
 
 
 class Post(models.Model):
