@@ -74,7 +74,7 @@ def post_detail(request, slug):
             .get(slug=slug)
         )
 
-        comments = Comment.objects.filter(post=post).select_related('author')
+        comments = post.comments.select_related('author')
 
         context = {
             'post': {
