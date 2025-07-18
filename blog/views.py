@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.db.models import Count, Prefetch
 from django.http import Http404
 from blog.models import Comment, Post, Tag
@@ -61,7 +61,7 @@ def post_detail(request, slug):
 
     popular_tags = Tag.objects.popular()[:5]
 
-    post = (
+    post = get_object_or_404(
         Post.objects.select_related('author')
         .prefetch_related('likes', Tag.objects.prefetch_for_posts())
         .annotate(comments_count=Count('comments'))
@@ -97,7 +97,7 @@ def tag_filter(request, tag_title):
 
     popular_tags = Tag.objects.popular()[:5]
 
-    tag = Tag.objects.with_posts_count().get(title=tag_title)
+    tag = get_object_or_404(Tag.objects.with_posts_count(), title=tag_title)
 
     related_posts = (
         tag.posts.select_related('author')
