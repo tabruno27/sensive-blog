@@ -30,14 +30,14 @@ def index(request):
     most_popular_posts = (
         Post.objects.popular()
         .select_related('author')
-        .prefetch_related(Tag.objects.prefetch_for_posts())
+        .prefetch_tags_with_posts_count()
         .fetch_with_comments_count()[:5]
     )
 
     most_fresh_posts = (
         Post.objects.order_by('-published_at')
         .select_related('author')
-        .prefetch_related(Tag.objects.prefetch_for_posts())
+        .prefetch_tags_with_posts_count()
         .fetch_with_comments_count()
     )
 
@@ -55,7 +55,7 @@ def post_detail(request, slug):
     most_popular_posts = (
         Post.objects.popular()
         .select_related('author')
-        .prefetch_related(Tag.objects.prefetch_for_posts())
+        .prefetch_tags_with_posts_count()
         .fetch_with_comments_count()[:5]
     )
 
@@ -63,9 +63,10 @@ def post_detail(request, slug):
 
     post = get_object_or_404(
         Post.objects.select_related('author')
-        .prefetch_related('likes', Tag.objects.prefetch_for_posts())
-        .annotate(comments_count=Count('comments'))
-        .get(slug=slug)
+        .prefetch_related('likes')
+        .prefetch_tags_with_posts_count()
+        .annotate(comments_count=Count('comments')),
+        slug=slug
     )
 
     comments = post.comments.select_related('author')
