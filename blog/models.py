@@ -11,7 +11,18 @@ class PostQuerySet(models.QuerySet):
 
     def fetch_with_comments_count(self):
         """Возвращает список постов с предварительно загруженным количеством комментариев."""
-        return self.annotate(comments_count=Count('comments'))
+        popular_posts = list(self.popular()[:limit])
+        post_ids = [post.id for post in popular_posts]
+        comments_counts = (
+            self.filter(id__in=post_ids)
+            .annotate(comments_count=Count('comments'))
+            .values_list('id', 'comments_count')
+        )
+        comments_count_dict = dict(comments_counts)
+        for post in popular_posts:
+            post.comments_count = comments_count_dict.get(post.id, 0)
+
+        return popular_posts
 
     def prefetch_tags_with_posts_count(self):
         """Оптимизированная загрузка тегов с подсчетом постов"""
