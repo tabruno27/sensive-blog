@@ -7,15 +7,17 @@ from django.db.models import Count, Prefetch
 class PostQuerySet(models.QuerySet):
     def popular(self):
         """Возвращает QuerySet популярных постов, отсортированных по лайкам"""
-        return self.annotate(likes_count=Count('likes'))\
-                  .order_by('-likes_count')
+        return self.annotate(likes_count=Count('likes')).order_by('-likes_count')
 
     def fetch_with_comments_count(self):
-        """
-        Возвращает список постов с предварительно загруженным количеством комментариев.
-        """
-        posts = self.annotate(comments_count=Count('comments'))
-        return posts
+        """Возвращает список постов с предварительно загруженным количеством комментариев."""
+        return self.annotate(comments_count=Count('comments'))
+
+    def prefetch_tags_with_posts_count(self):
+        """Оптимизированная загрузка тегов с подсчетом постов"""
+        return self.prefetch_related(
+            Prefetch('tags', queryset=Tag.objects.annotate(posts_count=Count('posts')))
+        )
 
 
 class Post(models.Model):
@@ -56,14 +58,6 @@ class Post(models.Model):
 class TagQuerySet(models.QuerySet):
     def popular(self):
         return self.annotate(posts_count=Count('posts')).order_by('-posts_count')
-
-    def with_posts_count(self):
-        """Возвращает QuerySet тегов с аннотированным количеством постов"""
-        return self.annotate(posts_count=Count('posts'))
-
-    def prefetch_for_posts(self):
-        """Возвращает Prefetch-объект для тегов с количеством постов"""
-        return Prefetch('tags', queryset=self.with_posts_count())
 
 
 class Tag(models.Model):
