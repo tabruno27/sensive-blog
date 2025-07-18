@@ -34,13 +34,14 @@ def index(request):
         .fetch_with_comments_count()[:5]
     )
 
-    most_fresh_posts = (
+    most_fresh_posts_qs = (
         Post.objects.order_by('-published_at')
         .select_related('author')
         .prefetch_tags_with_posts_count()
-        .fetch_with_comments_count()
     )
 
+    most_fresh_posts = list(most_fresh_posts_qs.annotate(comments_count=Count('comments'))[:20])
+    
     popular_tags = Tag.objects.popular()[:5]
 
     context = {
@@ -92,7 +93,7 @@ def tag_filter(request, tag_title):
     most_popular_posts = (
         Post.objects.popular()
         .select_related('author')
-        .prefetch_related(Tag.objects.prefetch_for_posts())
+        .prefetch_tags_with_posts_count()
         .fetch_with_comments_count()[:5]
     )
 
@@ -102,7 +103,7 @@ def tag_filter(request, tag_title):
 
     related_posts = (
         tag.posts.select_related('author')
-        .prefetch_related(Tag.objects.prefetch_for_posts())
+        .prefetch_tags_with_posts_count()
         .annotate(comments_count=Count('comments'))[:20]
     )
 
