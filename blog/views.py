@@ -4,11 +4,6 @@ from django.http import Http404
 from blog.models import Comment, Post, Tag
 
 
-
-def get_related_posts_count(tag):
-    return tag.posts.count()
-
-
 def serialize_post(post):
     tags = post.tags.all()
     return {
