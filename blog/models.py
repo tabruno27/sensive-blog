@@ -11,7 +11,7 @@ class PostQuerySet(models.QuerySet):
 
     def fetch_with_comments_count(self):
         """Возвращает список постов с предварительно загруженным количеством комментариев."""
-        popular_posts = list(self.popular()[:limit])
+        popular_posts = list(self.popular()[:5])
         post_ids = [post.id for post in popular_posts]
         comments_counts = (
             self.filter(id__in=post_ids)
