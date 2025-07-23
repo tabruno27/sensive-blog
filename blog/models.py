@@ -5,13 +5,20 @@ from django.db.models import Count, Prefetch
 
 
 class PostQuerySet(models.QuerySet):
-    def popular(self):
-        """Возвращает QuerySet популярных постов, отсортированных по лайкам"""
-        return self.annotate(likes_count=Count('likes')).order_by('-likes_count')
-
     def fetch_with_comments_count(self):
         """Возвращает список постов с предварительно загруженным количеством комментариев."""
-        return self.annotate(comments_count=Count('comments'))
+        posts = list(self)
+        post_ids = [post.id for post in posts]
+        comments_counts = (
+            Post.objects.filter(id__in=post_ids)
+            .annotate(comments_count=Count('comments'))
+            .values_list('id', 'comments_count')
+        )
+        comments_count_dict = dict(comments_counts)
+        for post in posts:
+            post.comments_count = comments_count_dict.get(post.id, 0)
+
+        return posts
 
     def prefetch_tags_with_posts_count(self):
         """Оптимизированная загрузка тегов с подсчетом постов"""
@@ -58,6 +65,9 @@ class Post(models.Model):
 class TagQuerySet(models.QuerySet):
     def popular(self):
         return self.annotate(posts_count=Count('posts')).order_by('-posts_count')
+
+    def with_posts_count(self):
+        return self.annotate(posts_count=Count("posts"))
 
 
 class Tag(models.Model):
